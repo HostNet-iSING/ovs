@@ -40,6 +40,7 @@
 #include <rte_pci.h>
 #include <rte_version.h>
 #include <rte_vhost.h>
+#include <rte_flow.h>
 
 #include "cmap.h"
 #include "coverage.h"
@@ -425,6 +426,7 @@ enum dpdk_hw_ol_features {
 
 enum dpdk_rx_steer_flags {
     DPDK_RX_STEER_LACP = 1 << 0,
+    DPDK_RX_STEER_PIPETUNE = 1 << 1,
 };
 
 /* Flags for the netdev_dpdk virtio_features_state field.
@@ -1243,6 +1245,64 @@ dpdk_eth_dev_port_config(struct netdev_dpdk *dev, int n_rxq, int n_txq)
         return 0;
     }
 
+    // ===================== Pipetune =====================
+    // #define MAX_PATTERN_NUM		3
+    // #define MAX_ACTION_NUM		2
+    // struct rte_flow *_flow;
+    // int res;
+    // struct rte_flow_attr attr;
+    // struct rte_flow_item pattern[MAX_PATTERN_NUM];
+    // struct rte_flow_action action[MAX_ACTION_NUM];
+    // struct rte_flow_action_queue queue_action;
+    // struct rte_flow_item_udp udp_spec;
+    // struct rte_flow_item_udp udp_mask;
+    // struct rte_flow_error error;
+
+    // for(uint32_t i=0; i<n_rxq; i++){
+    //     ///!  \note must set as 0!!!
+    //     memset(pattern, 0, sizeof(pattern));
+    //     memset(action, 0, sizeof(action));
+    //     memset(&attr, 0, sizeof(struct rte_flow_attr));
+    //     attr.ingress = 1;
+
+    //     // configure steering action
+    //     memset(&queue_action, 0, sizeof(struct rte_flow_action_queue));
+    //     queue_action.index = i;
+    //     action[0].type = RTE_FLOW_ACTION_TYPE_QUEUE;
+    //     action[0].conf = &queue_action;
+    //     action[1].type = RTE_FLOW_ACTION_TYPE_END;
+
+    //     // configure steering pattern
+    //     memset(&udp_spec, 0, sizeof(struct rte_flow_item_udp));
+    //     memset(&udp_mask, 0, sizeof(struct rte_flow_item_udp));
+    //     udp_spec.hdr.dst_port = htons((i + 10010));
+    //     udp_mask.hdr.dst_port = 0xffff;
+    //     udp_mask.hdr.src_port = 0x0000;
+    //     pattern[1].type = RTE_FLOW_ITEM_TYPE_UDP;
+    //     pattern[1].spec = &udp_spec;
+    //     pattern[1].mask = &udp_mask;
+
+    //     pattern[2].type = RTE_FLOW_ITEM_TYPE_END;
+
+    //     /*! \note it's mandatory on dpdk to add L3 rules before L4 rules */
+    //     pattern[0].type = RTE_FLOW_ITEM_TYPE_IPV4;
+
+    //     res = rte_flow_validate(dev->port_id, &attr, pattern, action, &error);
+    //     if(res != 0){
+    //         VLOG_WARN("Flow rules for steering validation failed: %s\n", error.message);
+    //         goto pipetune_out;
+    //     }
+    //     _flow = rte_flow_create(dev->port_id, &attr, pattern, action, &error);
+    //     if(_flow == NULL){
+    //         VLOG_WARN("Failed to create flow rule for steering: %s\n", error.message);
+    //         goto pipetune_out;
+    //     }
+    //     VLOG_INFO("create flow rules from UDP port %u to core %u\n", i+10010, i);
+    // }
+    // pipetune_out:
+    //     ;
+    // ===================== Pipetune =====================
+
     return diag;
 }
 
@@ -2000,6 +2060,8 @@ netdev_dpdk_get_config(const struct netdev *netdev, struct smap *args)
 
     if (dev->rx_steer_flags == DPDK_RX_STEER_LACP) {
         smap_add(args, "rx-steering", "rss+lacp");
+    } else if (dev->rx_steer_flags == DPDK_RX_STEER_PIPETUNE){
+        smap_add(args, "rx-steering", "rss+pipetune");
     }
 
     smap_add(args, "dpdk-lsc-interrupt",
@@ -2263,6 +2325,8 @@ dpdk_set_rx_steer_config(struct netdev *netdev, struct netdev_dpdk *dev,
 
     if (!strcmp(arg, "rss+lacp")) {
         flags = DPDK_RX_STEER_LACP;
+    } else if (!strcmp(arg, "rss+pipetune")){
+        flags = DPDK_RX_STEER_PIPETUNE;
     } else if (strcmp(arg, "rss")) {
         VLOG_WARN_BUF(errp, "%s: options:rx-steering "
                       "unsupported parameter value '%s'",
@@ -4461,6 +4525,8 @@ netdev_dpdk_get_status(const struct netdev *netdev, struct smap *args)
         smap_add(args, "rx-steering", "unsupported");
     } else if (rx_steer_flags == DPDK_RX_STEER_LACP) {
         smap_add(args, "rx-steering", "rss+lacp");
+    } else if (rx_steer_flags == DPDK_RX_STEER_PIPETUNE) {
+        smap_add(args, "rx-steering", "rss+pipetune");
     } else {
         ovs_assert(!rx_steer_flags);
         smap_add(args, "rx-steering", "rss");
@@ -5861,18 +5927,10 @@ static const struct dpdk_qos_ops trtcm_policer_ops = {
 static int
 dpdk_rx_steer_add_flow(struct netdev_dpdk *dev,
                       const struct rte_flow_item items[],
+                      const struct rte_flow_action actions[],
                       const char *desc)
 {
     const struct rte_flow_attr attr = { .ingress = 1 };
-    const struct rte_flow_action actions[] = {
-        {
-            .type = RTE_FLOW_ACTION_TYPE_QUEUE,
-            .conf = &(const struct rte_flow_action_queue) {
-                .index = dev->up.n_rxq - 1,
-            },
-        },
-        { .type = RTE_FLOW_ACTION_TYPE_END },
-    };
     struct rte_flow_error error;
     struct rte_flow *flow;
     size_t num;
@@ -5902,8 +5960,6 @@ dpdk_rx_steer_add_flow(struct netdev_dpdk *dev,
     dev->rx_steer_flows[dev->rx_steer_flows_num] = flow;
     dev->rx_steer_flows_num = num;
 
-    VLOG_INFO("%s: rx-steering: redirected %s traffic to rx queue %d",
-              netdev_get_name(&dev->up), desc, dev->up.n_rxq - 1);
 out:
     return err;
 }
@@ -5991,24 +6047,68 @@ dpdk_rx_steer_configure(struct netdev_dpdk *dev)
             },
             { .type = RTE_FLOW_ITEM_TYPE_END },
         };
-        err = dpdk_rx_steer_add_flow(dev, items, "lacp");
+        const struct rte_flow_action actions[] = {
+            {
+                .type = RTE_FLOW_ACTION_TYPE_QUEUE,
+                .conf = &(const struct rte_flow_action_queue) {
+                    .index = dev->up.n_rxq - 1,
+                },
+            },
+            { .type = RTE_FLOW_ACTION_TYPE_END },
+        };
+        err = dpdk_rx_steer_add_flow(dev, items, actions, "lacp");
         if (err) {
             goto out;
         }
-    }
+        VLOG_INFO("%s: rx-steering: redirected lacp traffic to rx queue %d",
+              netdev_get_name(&dev->up), dev->up.n_rxq - 1);
 
-    if (dev->rx_steer_flows_num) {
-        /* Reconfigure RSS reta in all but the rx steering queue. */
-        err = dpdk_rx_steer_rss_configure(dev, dev->up.n_rxq - 1);
-        if (err) {
-            goto out;
+        if (dev->rx_steer_flows_num) {
+            /* Reconfigure RSS reta in all but the rx steering queue. */
+            err = dpdk_rx_steer_rss_configure(dev, dev->up.n_rxq - 1);
+            if (err) {
+                goto out;
+            }
+            if (dev->up.n_rxq == 2) {
+                VLOG_INFO("%s: rx-steering: redirected other traffic to "
+                        "rx queue 0", netdev_get_name(&dev->up));
+            } else {
+                VLOG_INFO("%s: rx-steering: applied rss on rx queues 0-%u",
+                        netdev_get_name(&dev->up), dev->up.n_rxq - 2);
+            }
         }
-        if (dev->up.n_rxq == 2) {
-            VLOG_INFO("%s: rx-steering: redirected other traffic to "
-                      "rx queue 0", netdev_get_name(&dev->up));
-        } else {
-            VLOG_INFO("%s: rx-steering: applied rss on rx queues 0-%u",
-                      netdev_get_name(&dev->up), dev->up.n_rxq - 2);
+        
+    } else if (dev->requested_rx_steer_flags & DPDK_RX_STEER_PIPETUNE) {
+        for(int i=0; i<dev->up.n_rxq - 1; i++){
+            const struct rte_flow_item items[] = {
+                { .type = RTE_FLOW_ITEM_TYPE_IPV4, },
+                {
+                    .type = RTE_FLOW_ITEM_TYPE_UDP,
+                    .spec = &(const struct rte_flow_item_udp){
+                        .hdr.dst_port = htons((i + 10010)),
+                    },
+                    .mask = &(const struct rte_flow_item_udp){
+                        .hdr.dst_port = 0xffff,
+                        .hdr.src_port = 0x0000,
+                    },
+                },
+                { .type = RTE_FLOW_ITEM_TYPE_END },
+            };
+            const struct rte_flow_action actions[] = {
+                {
+                    .type = RTE_FLOW_ACTION_TYPE_QUEUE,
+                    .conf = &(const struct rte_flow_action_queue) {
+                        .index = i,
+                    },
+                },
+                { .type = RTE_FLOW_ACTION_TYPE_END },
+            };
+            err = dpdk_rx_steer_add_flow(dev, items, actions, "pipetune");
+            if (err) {
+                goto out;
+            }
+            VLOG_INFO("%s: rx-steering: redirected UDP traffic w/ dport %u to rx queue %d",
+                netdev_get_name(&dev->up), i + 10010, i);
         }
     }
 
