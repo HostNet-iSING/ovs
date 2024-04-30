@@ -1,0 +1,12 @@
+--------------------begin all measurement--------------------
+--------------------llc performance--------------------
+L1-dcache-loads: 27647978325
+L1-dcache-load-misses: 1121961445
+L1-dcache-stores: 14268274538
+L1-dcache-load-misses-rate: 0.04
+LLC-loads: 163338989
+LLC-load-misses: 81889400
+LLC-load-misses-rate: 0.50
+LLC-stores: 73814716
+LLC-store-misses: 16973189
+LLC-store-misses-rate: 0.23

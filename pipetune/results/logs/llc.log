@@ -1,0 +1,15 @@
+# started on Wed May  1 06:23:33 2024
+
+
+ Performance counter stats for process id '3162885,3162886':
+
+       27647978325      L1-dcache-loads                                                         (42.69%)
+        1121961445      L1-dcache-load-misses            #    4.06% of all L1-dcache accesses   (57.14%)
+       14268274538      L1-dcache-stores                                                        (57.25%)
+         163338989      LLC-loads                                                               (57.34%)
+          81889400      LLC-load-misses                  #   50.13% of all L1-icache accesses   (57.33%)
+          73814716      LLC-stores                                                              (28.46%)
+          16973189      LLC-store-misses                                                        (28.39%)
+
+       3.014553160 seconds time elapsed
+

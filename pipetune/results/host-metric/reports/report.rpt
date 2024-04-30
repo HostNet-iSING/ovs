@@ -1,0 +1,20 @@
+--------------------begin all measurement--------------------
+--------------------mem performance--------------------
+metric       bandwidth(MB/s)
+Node0_rd_bw:  3911.810000
+Node0_wr_bw:  3116.795000
+Node0_total_bw:  7028.605000
+Node1_rd_bw:  3138.120000
+Node1_wr_bw:  2811.295000
+Node1_total_bw:  5949.415000
+--------------------llc performance--------------------
+L1-dcache-loads: 14546988475
+L1-dcache-load-misses: 1338958841
+L1-dcache-stores: 7700335335
+L1-dcache-load-misses-rate: 0.09
+LLC-loads: 104313481
+LLC-load-misses: 51020881
+LLC-load-misses-rate: 0.49
+LLC-stores: 373275324
+LLC-store-misses: 78414107
+LLC-store-misses-rate: 0.21

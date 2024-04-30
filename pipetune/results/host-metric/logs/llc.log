@@ -1,0 +1,15 @@
+# started on Mon Apr  8 15:37:41 2024
+
+
+ Performance counter stats for 'system wide':
+
+       14546988475      L1-dcache-loads                                                         (42.87%)
+        1338958841      L1-dcache-load-misses            #    9.20% of all L1-dcache accesses   (57.17%)
+        7700335335      L1-dcache-stores                                                        (57.17%)
+         104313481      LLC-loads                                                               (57.17%)
+          51020881      LLC-load-misses                  #   48.91% of all L1-icache accesses   (57.13%)
+         373275324      LLC-stores                                                              (28.55%)
+          78414107      LLC-store-misses                                                        (28.55%)
+
+       2.997315448 seconds time elapsed
+
