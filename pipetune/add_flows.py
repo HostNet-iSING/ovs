@@ -13,8 +13,8 @@ def int_to_ipv4(n):
 
 base_ip = ipv4_to_int("20.0.0.0")
 base_port = 10010
-num_ips = KB(2)
-num_port = 16
+num_ips = 8192
+num_port = 2
 
 def __generate_flow_list() -> list:
     retval = []

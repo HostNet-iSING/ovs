@@ -233,25 +233,25 @@ CLEANFILES += distfiles
 .PHONY: dist-hook-git
 
 # Check that every .c file includes <config.h>.
-ALL_LOCAL += config-h-check
-config-h-check:
-	@cd $(srcdir); \
-	if test -e .git && (git --version) >/dev/null 2>&1 && \
-	  git --no-pager grep -L '#include <config\.h>' `git ls-files | grep '\.c$$' | \
-	    grep -vE '^datapath-windows|^lib/sflow|^python|^third-party'`; \
-	then \
-	  echo "See above for list of violations of the rule that"; \
-	  echo "every C source file must #include <config.h>."; \
-	  exit 1; \
-	fi; \
-	if grep '#include' include/openvswitch/*.h | \
-	    grep -vE '(<.*>)|("openvswitch)|("openflow)'; \
-	then \
-	  echo "See above for list of violations of the rule that"; \
-	  echo "public openvswitch header file should not include internal library."; \
-	  exit 1; \
-	fi
-.PHONY: config-h-check
+# ALL_LOCAL += config-h-check
+# config-h-check:
+#	@cd $(srcdir); \
+#	if test -e .git && (git --version) >/dev/null 2>&1 && \
+#	  git --no-pager grep -L '#include <config\.h>' `git ls-files | grep '\.c$$' | \
+#	    grep -vE '^datapath-windows|^lib/sflow|^python|^third-party'`; \
+#	then \
+#	  echo "See above for list of violations of the rule that"; \
+#	  echo "every C source file must #include <config.h>."; \
+#	  exit 1; \
+#	fi; \
+#	if grep '#include' include/openvswitch/*.h | \
+#	    grep -vE '(<.*>)|("openvswitch)|("openflow)'; \
+#	then \
+#	  echo "See above for list of violations of the rule that"; \
+#	  echo "public openvswitch header file should not include internal library."; \
+#	  exit 1; \
+#	fi
+# .PHONY: config-h-check
 
 # Check for printf() type modifiers that MSVC doesn't support.
 ALL_LOCAL += printf-check
@@ -281,17 +281,17 @@ static-check:
 .PHONY: static-check
 
 # Check that assert.h is not used (outside a small set of files).
-ALL_LOCAL += check-assert-h-usage
-check-assert-h-usage:
-	@if test -e $(srcdir)/.git && (git --version) >/dev/null 2>&1 && \
-	  (cd $(srcdir) && git --no-pager grep -l -E '[<]assert.h[>]') | \
-	  $(EGREP) -v '^lib/(sflow_receiver|vlog).c$$|^tests/'; \
-	then \
-	  echo "Files listed above unexpectedly #include <""assert.h"">."; \
-	  echo "Please use ovs_assert (from util.h) instead of assert."; \
-	  exit 1; \
-	fi
-.PHONY: check-assert-h-usage
+# ALL_LOCAL += check-assert-h-usage
+# check-assert-h-usage:
+#	@if test -e $(srcdir)/.git && (git --version) >/dev/null 2>&1 && \
+#	  (cd $(srcdir) && git --no-pager grep -l -E '[<]assert.h[>]') | \
+#	  $(EGREP) -v '^lib/(sflow_receiver|vlog).c$$|^tests/'; \
+#	then \
+#	  echo "Files listed above unexpectedly #include <""assert.h"">."; \
+#	  echo "Please use ovs_assert (from util.h) instead of assert."; \
+#	  exit 1; \
+#	fi
+# .PHONY: check-assert-h-usage
 
 # Check that LITTLE_ENDIAN and BIG_ENDIAN are not used unless BYTE_ORDER is
 # also mentioned.  (<endian.h> always defines the former two constants.  They

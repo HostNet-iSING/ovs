@@ -1,15 +1,15 @@
-# started on Mon Apr  8 15:37:41 2024
+# started on Sat Nov  2 02:50:54 2024
 
 
- Performance counter stats for 'system wide':
+ Performance counter stats for process id '295676,295677':
 
-       14546988475      L1-dcache-loads                                                         (42.87%)
-        1338958841      L1-dcache-load-misses            #    9.20% of all L1-dcache accesses   (57.17%)
-        7700335335      L1-dcache-stores                                                        (57.17%)
-         104313481      LLC-loads                                                               (57.17%)
-          51020881      LLC-load-misses                  #   48.91% of all L1-icache accesses   (57.13%)
-         373275324      LLC-stores                                                              (28.55%)
-          78414107      LLC-store-misses                                                        (28.55%)
+       33536102066      L1-dcache-loads                                               (42.91%)
+        2111344219      L1-dcache-load-misses     #    6.30% of all L1-dcache accesses  (57.28%)
+       16913405107      L1-dcache-stores                                              (57.28%)
+          85537298      LLC-loads                                                     (57.42%)
+            929903      LLC-load-misses           #    1.09% of all LL-cache accesses  (57.09%)
+         128163154      LLC-stores                                                    (28.48%)
+           2118614      LLC-store-misses                                              (28.40%)
 
-       2.997315448 seconds time elapsed
+       2.964419560 seconds time elapsed
 

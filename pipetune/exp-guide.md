@@ -76,11 +76,17 @@ ovs-ctl --no-ovs-vswitchd start
 # 1 core
 # ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true other_config:pmd-cpu-mask=0x100
 
+# 2 cores
+# ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true other_config:pmd-cpu-mask=0x300
+
 # 4 cores
 # ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true other_config:pmd-cpu-mask=0xF00
 
 # 8 cores
 # ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true other_config:pmd-cpu-mask=0xFF00
+
+# 12 cores
+# ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true other_config:pmd-cpu-mask=0xF00FF00
 
 # 16 cores
 ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true other_config:pmd-cpu-mask=0xFF00FF00
@@ -110,9 +116,13 @@ ethtool -L rdma0 combined 16
 # 请注意 NUMA! 
 ovs-vsctl add-port br0 rdma0 -- set interface rdma0 type=dpdk options:n_rxq=1 options:n_txq=1 options:dpdk-devargs=0000:98:00.0 other_config:pmd-rxq-affinity="0:8" options:rx-steering=rss+pipetune
 
+ovs-vsctl add-port br0 rdma0 -- set interface rdma0 type=dpdk options:n_rxq=2 options:n_txq=2 options:dpdk-devargs=0000:98:00.0 other_config:pmd-rxq-affinity="0:8,1:9" options:rx-steering=rss+pipetune
+
 ovs-vsctl add-port br0 rdma0 -- set interface rdma0 type=dpdk options:n_rxq=4 options:n_txq=4 options:dpdk-devargs=0000:98:00.0 other_config:pmd-rxq-affinity="0:8,1:9,2:10,3:11" options:rx-steering=rss+pipetune
 
 ovs-vsctl add-port br0 rdma0 -- set interface rdma0 type=dpdk options:n_rxq=8 options:n_txq=8 options:dpdk-devargs=0000:98:00.0 other_config:pmd-rxq-affinity="0:8,1:9,2:10,3:11,4:12,5:13,6:14,7:15" options:rx-steering=rss+pipetune
+
+ovs-vsctl add-port br0 rdma0 -- set interface rdma0 type=dpdk options:n_rxq=12 options:n_txq=12 options:dpdk-devargs=0000:98:00.0 other_config:pmd-rxq-affinity="0:8,1:9,2:10,3:11,4:12,5:13,6:14,7:15,8:24,9:25,10:26,11:27" options:rx-steering=rss+pipetune
 
 ovs-vsctl add-port br0 rdma0 -- set interface rdma0 type=dpdk options:n_rxq=16 options:n_txq=16 options:dpdk-devargs=0000:98:00.0 other_config:pmd-rxq-affinity="0:8,1:9,2:10,3:11,4:12,5:13,6:14,7:15,8:24,9:25,10:26,11:27,12:28,13:29,14:30,15:31" options:rx-steering=rss+pipetune
 ```
